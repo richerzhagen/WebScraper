@@ -20,19 +20,21 @@ class App extends Component {
       tweets: [
         {
           _id:0,
-          author:"donald trump",
+          date:"today",
+          user:"donald trump",
           content:"i am the president",
-          likes: "2",
-          favourites: "0",
-          retweets: "1"
+          commentCount: "2",
+          favoriteCount: "0",
+          retweetCount: "1"
         },
         {
           _id:1,
-          author:"donald trump",
+          date:"also today",
+          user:"donald trump",
           content:"look at me",
-          likes: "4",
-          favourites: "1",
-          retweets: "2"
+          commentCount: "4",
+          favoriteCount: "1",
+          retweetCount: "2"
         },
       ],
     };
@@ -70,7 +72,10 @@ class App extends Component {
         case "url-list":
           that.setState({ toCrawl: data.content });
           break;
-        case "add-url":
+          case "tweet-list":
+            that.setState({ tweets: data.content });
+            break;
+          case "add-url":
           that.setState({ toCrawl: [...that.state.toCrawl, data.content] });
           break;
         case "del-url":

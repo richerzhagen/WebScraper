@@ -1,4 +1,5 @@
 const puppeteer = require('puppeteer');
+const moment = require('moment');
 
 const BASE_URL = 'https://twitter.com/';
 const USERNAME_URL = (username) => `https://twitter.com/${username}`;
@@ -9,7 +10,10 @@ let page = null;
 const twitter = {
 
     initialize: async() => {
-        browser = await puppeteer.launch({headless: true});
+        // show browser
+        browser = await puppeteer.launch({headless: false});
+        // hide browser
+        // browser = await puppeteer.launch({headless: true});
         page = await browser.newPage();
     },
 
@@ -64,19 +68,19 @@ const twitter = {
             for(let tweetElement of tweetsArray){
                 try {
                     //TODO: different types of tweets / retweets / sorting when posted on same time / filter on keywords
-                    let tweet = await tweetElement.$eval('div[class="css-901oao r-hkyrab r-1qd0xha r-a023e6 r-16dba41 r-ad9z0x r-bcqeeo r-bnwqim r-qvutc0"] span', element => element.innerText);
+                    let content = await tweetElement.$eval('div[class="css-901oao r-hkyrab r-1qd0xha r-a023e6 r-16dba41 r-ad9z0x r-bcqeeo r-bnwqim r-qvutc0"] span', element => element.innerText);
                     let date = await tweetElement.$eval('time', element => element.getAttribute('dateTime'));
                     // let interaction = await tweetElement.$eval('div[class="css-1dbjc4n r-18u37iz r-1wtj0ep r-156q2ks r-1mdbhws"]');
                     // let commentCount = await interaction.$eval('div[data-testid="reply"] span span', element => element.innerText);
                     // let retweetCount = await interaction.$eval('div[data-testid="retweet"] span span', element => element.innerText);
                     // let favoriteCount = await interaction.$eval('div[data-testid="like"] span span', element => element.innerText);
-
+                    date = moment(date).format('MMMM Do YYYY, h:mm:ss a');
                     let interaction = await tweetElement.$$('div[class="css-1dbjc4n r-1iusvr4 r-18u37iz r-16y2uox r-1h0z5md"');
                     let commentCount = await interaction[0].$eval('span[class="css-901oao css-16my406 r-1qd0xha r-ad9z0x r-bcqeeo r-qvutc0"]', element => element.innerText);
                     let retweetCount = await interaction[1].$eval('span[class="css-901oao css-16my406 r-1qd0xha r-ad9z0x r-bcqeeo r-qvutc0"]', element => element.innerText);
                     let favoriteCount = await interaction[2].$eval('span[class="css-901oao css-16my406 r-1qd0xha r-ad9z0x r-bcqeeo r-qvutc0"]', element => element.innerText);
                 //    debugger;
-                    tweets.push({date, tweet, commentCount, retweetCount, favoriteCount});
+                    tweets.push({date, user, content, commentCount, retweetCount, favoriteCount});
 
                 } catch (error) {
                     // send mail

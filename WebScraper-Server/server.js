@@ -5,13 +5,14 @@ const app = express();
 var port = 4000;
 const router = express.Router();
 var crawlList = [];
+var tweetList = [];
 
 //#region mongodb
 const mongoose = require("mongoose");
 // initialise mongodb connection
-mongoose.connect("mongodb://localhost:27017/nodedb", { 
+mongoose.connect("mongodb://localhost:27017/nodedb", {
   useUnifiedTopology: true,
-  useNewUrlParser: true, 
+  useNewUrlParser: true,
 });
 let db = mongoose.connection;
 
@@ -41,7 +42,11 @@ let schemaTweet = mongoose.Schema({
     type: String,
     required: true,
   },
-  tweet: {
+  user: {
+    type: String,
+    required: true,
+  },
+  content: {
     type: String,
     required: true,
   },
@@ -123,10 +128,35 @@ var getUrls = () => {
 };
 //#endregion
 
+var getTweets = () => {
+  ModelTweet.find({}, function (err, result) {
+    if (err) {
+      console.log("error");
+      throw err;
+    }
+    tweetList = result;
+  });
+};
+
+// var saveTweet = (tweet) => {
+//   var doc1 = new ModelTweet({
+//     date: "tweet.date",
+//     tweet: "tweet.content",
+//     commentCount: "tweet.commentCount",
+//     retweetCount: "tweet.retweetCount",
+//     favoriteCount: "tweet.favoriteCount",
+//   });
+//   doc1.save(function (err, doc) {
+//     if (err) return console.error(err);
+//     console.log("Document inserted succussfully!");
+//   });
+//   return doc1._id;
+// };
 var saveTweet = (tweet) => {
   var doc1 = new ModelTweet({
     date: tweet.date,
-    tweet: tweet.content,
+    content: tweet.content,
+    user: tweet.user,
     commentCount: tweet.commentCount,
     retweetCount: tweet.retweetCount,
     favoriteCount: tweet.favoriteCount,
@@ -138,13 +168,16 @@ var saveTweet = (tweet) => {
   return doc1._id;
 };
 
-ModelTweet.find({}, function (err, result) {
-  if (err) {
-    console.log("error");
-    throw err;
-  }
-  crawlList = result;
-});
+// db.collection.find({_id: "myId"}, {_id: 1}).limit(1)
+// ModelTweet.find({_id: "myId"}, {_id: 1}).limit(1)
+
+// ModelTweet.find({}, function (err, result) {
+//   if (err) {
+//     console.log("error");
+//     throw err;
+//   }
+// crawlList = result;
+// });
 
 //#endregion
 
@@ -209,7 +242,9 @@ wss.on("connection", (ws) => {
     }
   });
   getUrls();
+  getTweets();
   ws.send(JSON.stringify({ content: crawlList, status: "url-list" }));
+  ws.send(JSON.stringify({ content: tweetList, status: "tweet-list" }));
 });
 
 //#endregion
@@ -220,13 +255,14 @@ const twitter = require("./twitter");
 (async () => {
   await twitter.initialize();
 
+  //optional
   //let user = await twitter.getUser('realDonaldTrump');
 
   let tweets = await twitter.getTweets("realDonaldTrump");
   console.log(tweets);
-  // tweets.forEach(tweet => {
-    
-  // });
-  // debugger;
+  tweets.forEach((tweet) => {
+    // debugger; 
+    saveTweet(tweet); // works
+  });
 })();
 //#endregion
